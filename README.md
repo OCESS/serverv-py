@@ -8,4 +8,4 @@
 ### Usage:
 
     # source bin/activate if you haven't done so in the current session
-    serverv-py/server.py --sevpath orbit-files/sevpath.RND
+    ./serverv-py/server.py --sevpath orbit-files/sevpath.RND
