@@ -4,6 +4,7 @@
     virtualenv -p python3 serverv-py
     cd serverv-py
     source bin/activate
+    pip install -r requirements.txt
 
 ### Usage:
 
