@@ -1,7 +1,6 @@
 ### Setup:
 
-    git clone https://github.com/OCESS/serverv-py && cd serverv-py
-    cd ../
+    git clone https://github.com/OCESS/serverv-py
     virtualenv -p python3 serverv-py
     cd serverv-py
     source bin/activate
