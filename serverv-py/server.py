@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Aims to clone serverv.bas."""
 import argparse
-from pathlib import PureWindowsPath, Path
+from pathlib import PureWindowsPath, PurePath, Path
 
 import filetransforms
 
@@ -47,6 +47,11 @@ del clients  # all information is now in client_path as the keys
 # 10 sim mirror (OSbackup.RND, ORBITSSE.RND)
 # 11 hab display (OSbackup.RND)
 
+def simplify_filename(filename):
+    """Return the lowercase filename, no extensions."""
+    return PurePath(filename.lower()).stem
+
+
 class FileConnector:
     """Writes contents of src/filename to dest/filename.
 
@@ -57,19 +62,25 @@ class FileConnector:
 
     This class seeks to generalize this logic.
 
-    Call self.parsesrc to update global variables (I know)
+    Call self.parsesrc to update 'global variables' (I know) in file_vars
     based on the contents of src/filename and then
-    call self.write_to_dest to write the contents fof src/filename
+    call self.write_to_dest to write the contents for src/filename
     to dest/filename, with a predefined transformation.
     """
 
-    def __init__(self, src, dests, filename, filesize, parsesrc, transform):
+    def __init__(self, src, dests, filename, filesize):
         """Simply set up instance."""
         self._srcpath = client_path[src] / filename
         self._destpaths = [client_path[dest] / filename for dest in dests]
         self._filesize = filesize
-        self._parsesrc = parsesrc
-        self._transform = transform
+        # Programmatically get parse, transform functions from filetransforms
+        # e.g. _parsesrc = simulator_orb5res_parse
+        self._parsesrc = getattr(
+            filetransforms,
+            src + '_' + simplify_filename(filename) + '_parse')
+        self._transform = getattr(
+            filetransforms,
+            src + '_' + simplify_filename(filename) + '_transform')
 
     def process_src(self):
         """Read src/filename and possibly changes variables in file_vars."""
@@ -81,10 +92,8 @@ class FileConnector:
         """Write src/filename to dest/filename with a transformation."""
         global file_vars
         if self._srcpath.stat().st_size != self._filesize:
-            raise IOError(str(self._srcpath) +
-                          ' filesize was not ' +
-                          str(self._filesize) +
-                          ' as expected')
+            raise IOError(str(self._srcpath) + ' filesize was not ' +
+                          str(self._filesize) + ' as expected')
         with self._srcpath.open('rb') as src:
             file_contents = bytearray(src.read(self._filesize))
             if file_contents[0] != file_contents[-1]:
@@ -96,15 +105,21 @@ class FileConnector:
                 dest.write(file_contents)
 
 
-file_vars = {'RCload': 0, 'Rt': 0, 'FCenable': 0}
+file_vars = {'RCload': 0, 'Rt': 0, 'FCenable': 0,
+             'PACKblock': 0, 'RCblock': 0, 'IS2': 0.0}
 
 file_connectors = [
-    FileConnector('simulator', ['HABeng'], 'ORB5res.RND', 412,
-                  filetransforms.simulator_HABeng_orb5res_parse,
-                  filetransforms.simulator_HABeng_orb5res_transform),
-    FileConnector('HABeecom', ['MCeecom', 'SIMeecom'], 'GASTELEMETRY.RND', 800,
-                  filetransforms.HABeecom_HABeng_gastelemetry_parse,
-                  filetransforms.HABeecom_HABeng_gastelemetry_transform)
+    # Block 300
+    FileConnector('simulator', ['HABeng'], 'ORB5res.RND', 412),
+    # Block 400
+    FileConnector('HABeecom', ['MCeecom', 'SIMeecom'],
+                  'GASTELEMETRY.RND', 800),
+    # Block 500
+    FileConnector('MCeecom', ['HABeecom', 'SIMeecom'], 'GASMC.RND', 82),
+    # Block 600
+    FileConnector('SIMeecom', ['HABeecom'], 'GASSIM.RND', 182),
+    # Block 700
+    FileConnector('SIMeecom', ['HABeecom'], 'DOORSIM.RND', 276)
 ]
 
 for connector in file_connectors:
