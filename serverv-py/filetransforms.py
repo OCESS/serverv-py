@@ -31,9 +31,9 @@ def simulator_orb5res_parse(src, file_vars):
 def simulator_orb5res_transform(file_contents, file_vars):
     """Block 320."""
     if file_vars['RCload'] != 0:
-        file_contents[255:256] = _mki(file_vars['Rt'])
+        file_contents[255:257] = _mki(file_vars['Rt'])
     if file_vars['FCenable'] == 0:
-        file_contents[293:294] = _mki(3)
+        file_contents[293:295] = _mki(3)
 
 
 def HABeecom_gastelemetry_parse(src, file_vars):
@@ -87,9 +87,9 @@ def SIMeecom_doorsim_parse(src, file_vars):
 
 def SIMeecom_doorsim_transform(file_contents, file_vars):
     """Block 710."""
-    file_contents[267:268] = _mki(file_vars['PACKblock'])
+    file_contents[267:269] = _mki(file_vars['PACKblock'])
     file_contents[269:271] = _mki(file_vars['RCblock'])
-    file_contents[271:274] = _mks(file_vars['IS2'])
+    file_contents[271:275] = _mks(file_vars['IS2'])
 
 
 def HABeng_orbitsse_parse(src, file_vars):
@@ -114,11 +114,10 @@ def HABeng_orbitsse_parse(src, file_vars):
 
 def HABeng_orbitsse_transform(file_contents, file_vars):
     """Also Block 810. No reset logic here."""
-    # if file_vars['probe'] == 0:
-    #    file_contents[129:136] = _mkd(0)
-    # if file_vars['probe'] == 1:
-    #    file_contents[129:136] = _mkd(1)
-    #    file_contents[137:144] = _mkd(28)
-    # if file_vars['probe'] == 2:
-    #    file_contents[129:136] = _mkd(2)
-    pass
+    if file_vars['probe'] == 0:
+        file_contents[129:137] = _mkd(0)
+    if file_vars['probe'] == 1:
+        file_contents[129:137] = _mkd(1)
+        file_contents[137:145] = _mkd(28)
+    if file_vars['probe'] == 2:
+        file_contents[129:137] = _mkd(2)

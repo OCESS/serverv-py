@@ -91,18 +91,17 @@ class FileConnector:
     def write_to_dest(self):
         """Write src/filename to dest/filename with a transformation."""
         global file_vars
-        if self._srcpath.stat().st_size != self._filesize:
-            raise IOError(str(self._srcpath) + ' filesize was not ' +
-                          str(self._filesize) + ' as expected')
+        assert self._srcpath.stat().st_size == self._filesize
         with self._srcpath.open('rb') as src:
             file_contents = bytearray(src.read(self._filesize))
-            if file_contents[0] != file_contents[-1]:
-                raise IOError(
-                    'chkCAR check failed when reading ' + str(self._srcpath))
+            assert file_contents[0] == file_contents[-1]
+        precontents_len = len(file_contents)
         self._transform(file_contents, file_vars)
+        assert len(file_contents) == precontents_len
         for destpath in self._destpaths:
             with destpath.open('wb') as dest:
                 dest.write(file_contents)
+            assert destpath.stat().st_size == self._filesize
 
 
 file_vars = {'RCload': 0, 'Rt': 0, 'FCenable': 0,
