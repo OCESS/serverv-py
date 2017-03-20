@@ -1,0 +1,3 @@
+*.RND binary
+*.RND -diff
+*.RND diff=rnd

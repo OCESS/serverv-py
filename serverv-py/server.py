@@ -106,7 +106,7 @@ class FileConnector:
 
 
 file_vars = {'RCload': 0, 'Rt': 0, 'FCenable': 0,
-             'PACKblock': 0, 'RCblock': 0, 'IS2': 0.0}
+             'PACKblock': 0, 'RCblock': 0, 'IS2': 0.0, 'probe': 0}
 
 file_connectors = [
     # Block 300
@@ -119,7 +119,10 @@ file_connectors = [
     # Block 600
     FileConnector('SIMeecom', ['HABeecom'], 'GASSIM.RND', 182),
     # Block 700
-    FileConnector('SIMeecom', ['HABeecom'], 'DOORSIM.RND', 276)
+    FileConnector('SIMeecom', ['HABeecom'], 'DOORSIM.RND', 276),
+    # Block 800
+    FileConnector('HABeng', ['flight', 'telemetry',
+                             'simulator', 'SIMmirror'], 'ORBITSSE.RND', 1159)
 ]
 
 for connector in file_connectors:

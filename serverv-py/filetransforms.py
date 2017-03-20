@@ -15,6 +15,12 @@ def _mks(single): return struct.pack("<f", single)
 def _cvs(fourbytes): return struct.unpack("<f", fourbytes)[0]
 
 
+def _mkd(double): return struct.pack("<d", double)
+
+
+def _cvd(eightbytes): return struct.unpack("<d", eightbytes)[0]
+
+
 def simulator_orb5res_parse(src, file_vars):
     """Block 300."""
     if file_vars['RCload'] != 0:
@@ -87,10 +93,32 @@ def SIMeecom_doorsim_transform(file_contents, file_vars):
 
 
 def HABeng_orbitsse_parse(src, file_vars):
-    """Block 800."""
-    pass
+    """Block 810."""
+    src.seek(230, SEEK_SET)
+    file_vars['EL6'] = _cvs(src.read(4))
+    src.seek(278, SEEK_SET)
+    file_vars['switch1'] = _cvi(src.read(2))
+    src.seek(210, SEEK_SET)
+    file_vars['EL1'] = _cvs(src.read(4))
+    file_vars['IS2'] = _cvs(src.read(4))
+    src.seek(688, SEEK_SET)
+    file_vars['PBflag'] = _cvs(src.read(4))
+    if (file_vars['EL6'] > 9000
+            and file_vars['switch1'] == 1
+            and file_vars['EL1'] > 10):
+        file_vars['RCblock'] = 0
+    file_vars['PACKblock'] = 1
+    if file_vars['PBflag'] == 9:
+        file_vars['PACKblock'] = 0
 
 
 def HABeng_orbitsse_transform(file_contents, file_vars):
-    """Block 810 - 820."""
+    """Also Block 810. No reset logic here."""
+    # if file_vars['probe'] == 0:
+    #    file_contents[129:136] = _mkd(0)
+    # if file_vars['probe'] == 1:
+    #    file_contents[129:136] = _mkd(1)
+    #    file_contents[137:144] = _mkd(28)
+    # if file_vars['probe'] == 2:
+    #    file_contents[129:136] = _mkd(2)
     pass
