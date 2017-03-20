@@ -5,6 +5,8 @@
     cd serverv-py
     source bin/activate
     pip install -r requirements.txt
+    # Optional, view diffs to .RND files in git diff:
+    echo '[diff "rnd"]\n\ttextconv = xxd\n\tcachetextconv = true\n\tbinary = true' >> .git/config
 
 ### Usage:
 
