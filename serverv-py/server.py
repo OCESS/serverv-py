@@ -101,11 +101,12 @@ class FileConnector:
         for destpath in self._destpaths:
             with destpath.open('wb') as dest:
                 dest.write(file_contents)
+            if self._filesize == 26:
+                print(file_contents, "eh")
             assert destpath.stat().st_size == self._filesize
 
 
-file_vars = {'RCload': 0, 'Rt': 0, 'FCenable': 0,
-             'PACKblock': 0, 'RCblock': 0, 'IS2': 0.0, 'probe': 0}
+file_vars = {}
 
 file_connectors = [
     # Block 300
@@ -121,8 +122,15 @@ file_connectors = [
     FileConnector('SIMeecom', ['HABeecom'], 'DOORSIM.RND', 276),
     # Block 800
     FileConnector('HABeng', ['flight', 'telemetry',
-                             'simulator', 'SIMmirror'], 'ORBITSSE.RND', 1159)
+                             'simulator', 'SIMmirror'], 'ORBITSSE.RND', 1159),
+    # Block 900
+    FileConnector('MCeecom', ['HABeecom', 'MCeecom'], 'TIME.RND', 26)
 ]
+
+for connector in file_connectors:
+    connector.process_src()
+for connector in file_connectors:
+    connector.write_to_dest()
 
 for connector in file_connectors:
     connector.process_src()
