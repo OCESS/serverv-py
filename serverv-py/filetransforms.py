@@ -1,7 +1,8 @@
 """Functions that copy file io functionality of serverv.bas."""
 from os import SEEK_SET
 import struct  # Reading floats from bytearrays
-from datetime import datetime
+from datetime import datetime, date, timedelta
+import time
 
 
 def _mki(integer): return integer.to_bytes(2, byteorder='little')
@@ -136,23 +137,49 @@ def display_mst_transform(file_contents, file_vars):
 
 
 def MCeecom_time_parse(src, file_vars):
-    """Block 940."""
-    pass
+    """Block 930. Also a bit of time logic."""
+    if file_vars.setdefault('use_file_time', True):
+        src.seek(1, SEEK_SET)
+        year = _cvi(src.read(2))
+        yday = _cvi(src.read(2))
+        hour = _cvi(src.read(2))
+        minute = _cvi(src.read(2))
+        doublesecond = _cvd(src.read(8))
+        date_fromordinal = date.fromordinal(
+            date(year, 1, 1).toordinal() + yday - 1)
+        file_vars['timestamp'] = datetime(
+            year=year,
+            month=date_fromordinal.month,
+            day=date_fromordinal.day,
+            hour=hour,
+            minute=minute,
+            second=int(doublesecond),
+            microsecond=int(doublesecond % 1 * 1000000)
+            # No tzinfo because this datetime is really beta-reality time.
+        )
+    else:
+        file_vars['last_time_update'] = time.perf_counter()
+        file_vars['timestamp'] = (
+            file_vars['timestamp']
+            + timedelta(seconds=time.perf_counter()
+                        - file_vars['last_time_update']))
 
 
 def MCeecom_time_transform(file_contents, file_vars):
-    """Also block 940."""
+    """Also block 930."""
     file_vars['chkBYTE'] = file_vars.setdefault('chkBYTE', 0) + 1
     if file_vars['chkBYTE'] > 58:
         file_vars['chkBYTE'] = 1
-    dt = file_vars.setdefault('timestamp', datetime(
-        2015, 3, 17, hour=4, minute=37, second=51))
-    # TODO: increment time
+    dt = file_vars['timestamp']
     file_contents[0:1] = [file_vars['chkBYTE']]
     file_contents[1:3] = _mki(dt.year)
     file_contents[3:5] = _mki(dt.timetuple().tm_yday)
     file_contents[5:7] = _mki(dt.hour)
     file_contents[7:9] = _mki(dt.minute)
-    file_contents[9:17] = _mkd(dt.second)
+    file_contents[9:17] = _mkd(dt.second + dt.microsecond / 1000000)
     file_contents[17:25] = b' ' * 8
     file_contents[25:26] = [file_vars['chkBYTE']]
+
+
+# TODO: implement OSbackup.RND
+# TODO: implement XXXXXXX reset
