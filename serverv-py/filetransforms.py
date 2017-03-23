@@ -142,18 +142,17 @@ def MCeecom_time_parse(src, file_vars):
 
 def MCeecom_time_transform(file_contents, file_vars):
     """Also block 940."""
-    #file_vars['chkBYTE'] = file_vars.setdefault('chkBYTE', 0) + 1
-    # if file_vars['chkBYTE'] > 58:
-    #file_vars['chkBYTE'] = 1
+    file_vars['chkBYTE'] = file_vars.setdefault('chkBYTE', 0) + 1
+    if file_vars['chkBYTE'] > 58:
+        file_vars['chkBYTE'] = 1
     dt = file_vars.setdefault('timestamp', datetime(
         2015, 3, 17, hour=4, minute=37, second=51))
-    # unsure how to be incrementing timestamp
-    #file_contents = bytearray()
-    #file_contents[0:1] = [file_vars['chkBYTE']]
+    # TODO: increment time
+    file_contents[0:1] = [file_vars['chkBYTE']]
     file_contents[1:3] = _mki(dt.year)
     file_contents[3:5] = _mki(dt.timetuple().tm_yday)
     file_contents[5:7] = _mki(dt.hour)
     file_contents[7:9] = _mki(dt.minute)
     file_contents[9:17] = _mkd(dt.second)
     file_contents[17:25] = b' ' * 8
-    #file_contents[25:26] = [file_vars['chkBYTE']]
+    file_contents[25:26] = [file_vars['chkBYTE']]

@@ -101,8 +101,6 @@ class FileConnector:
         for destpath in self._destpaths:
             with destpath.open('wb') as dest:
                 dest.write(file_contents)
-            if self._filesize == 26:
-                print(file_contents, "eh")
             assert destpath.stat().st_size == self._filesize
 
 
