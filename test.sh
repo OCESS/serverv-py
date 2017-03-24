@@ -3,11 +3,14 @@
 # except TIME.RND
 
 TMPDIR="`mktemp -dp .`"
+
+trap "rm -rf $TMPDIR; exit 1" EXIT HUP INT TERM
+
 cp -r orbit-files/* "$TMPDIR"
 
 RETVAL=0
 
-./serverv-py/server.py --sevpath "$TMPDIR/sevpath.RND"
+timeout --signal=TERM 3 ./serverv-py/server.py --sevpath "$TMPDIR/sevpath.RND"
 
 for f in `find orbit-files -type f -printf '%P\n'`; do
   if [ "`basename $f`" != 'TIME.RND' ]; then
@@ -16,5 +19,4 @@ for f in `find orbit-files -type f -printf '%P\n'`; do
   fi
 done
 
-rm -rf "$TMPDIR"
 exit $RETVAL

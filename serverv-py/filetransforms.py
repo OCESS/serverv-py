@@ -40,7 +40,6 @@ def simulator_orb5res_transform(file_contents, file_vars):
 
 def HABeecom_gastelemetry_parse(src, file_vars):
     """Block 400."""
-    # Note we're doing float/int equality. I dunno man, I just copy serverv.bas
     src.seek(323, SEEK_SET)
     file_vars['PROBEflag'] = _cvs(src.read(4))
     src.seek(251, SEEK_SET)
@@ -51,6 +50,7 @@ def HABeecom_gastelemetry_parse(src, file_vars):
     src.seek(415, SEEK_SET)
     file_vars['O2b1'] = _cvs(src.read(4))
     file_vars['O2b2'] = _cvs(src.read(4))
+    # Note we're doing float/int equality. I dunno man, I just copy serverv.bas
     if file_vars['O2a1'] > 0 and file_vars['O2a2'] == 1:
         file_vars['FCenable'] = 1
     if file_vars['O2b1'] > 0 and file_vars['O2b2'] == 1:
