@@ -1,0 +1,128 @@
+neworb notes:
+
+Pz(0,1,2) = { color number, x, y } 3021 times
+example:
+ 7 , 1.865917E+20 ,-6.165191E+19
+
+B(0,1) = { first_entity, second_entity} 241 times
+example:
+ 0 , 1
+show which entities shouldn't interact
+
+what's the deal with 37, 28X?
+
+P(0, 4, 5, 8, 9, 10) = { colour, mass, radius, atmosphere_density, atmosphere_height, wtf } 40 times
+
+then year, day, hr, min, sec
+
+Px(3) Py(3) Vx() Vy() P(1, 2) = {xpos, ypos, xvelocity, yvelocity, xaccel, yaccel}
+
+names
+
+what do the numbers after names mean? need new orbit
+
+
+
+
+
+
+
+RND version:
+
+sevpath.RND contains 25-width paths to state files
+path 1 is flight
+path 2 is mirror (reset, restart "XXXXXYY")
+path 3 is telemetry (reset)
+path 4 is simulator (reset)
+path 5 is hab eecom
+path 6 is MC eecom
+path 7 is sim eecom (esimreset)
+path 8 is display (dispreset)
+path 9 is hab eng (engreset "XXXXXYY")
+path 10 is sim mirror (only normal)
+path 11 is hab display (dispreset, same as 8)
+
+we open path1/osbackup.rnd,1427 and read the first field. field.first() == field.last(). field.second() is seven chars containg version I guess.
+we're at line 110 when we start writing this places, but I'll pick this up at a later date.
+
+write "XXXXXYY" to mirror/OSbackup.rnd 2nd to restart,
+write "XXXXXXX" to mirror/OSbackup.rnd 2nd to mirrorreset,
+write "ORBIT5S" to mirror/OSbackup.rnd 2nd for normalcy
+
+write "XXXXXXX" telem/osbackup.rnd to telreset
+write "ORBIT5S" " for normalcy (all checkchar)
+
+can SIMreset as well, simulator/osbackup.rnd
+
+get simulator/osb5res.rnd first field, check chars. it's 4500... in mine? that's in inpstr2 now.
+
+
+l310: if RCload != 0, orb5res.rnd[255-256] in memory += 4*RCload
+orb5res.rnd[293-294] in memory = 3
+write orb5res.rnd in memory to habeng/ORB5res.RND, telemetry/ORB5res.RND
+
+read simulator
+
+l310: IF RCload where is RCload set? by reading all of habeecom/gastelemetry.rnd into inpstr3$ and then RCload = file[251-254]
+
+
+
+
+(inpstr3$ is habeecom/gastelemetry.rnd) l401
+l410 read PROBEflag from [323-326] of "
+
+restartFLAG temporarily skips reading
+
+O2a1 = (int)habeecom/gastelemetry.rnd[399-402]
+O2a2 = (int)habeecom/gastelemetry.rnd[403-406]
+O2b1 = (int)habeecom/gastelemetry.rnd[407-410]
+O2b2 = (int)habeecom/gastelemetry.rnd[410-413]
+
+
+lines until 170 are writing XXXXXXYY or not
+
+block 312, 320 is writing simulator/orb5res.rnd to habeng/orb5res.rnd+telemetry/orb5res.rnd, with [255-256] += 4*RCload, [293-294] = 3
+
+block 400 is reading in habeecom/gastelemetry.rnd to inpSTR3$
+block 410 calculate PROBEflag and FCenable and RCload and O2[ab][12] from above
+block 410 write habeecom/gastelemetry.rnd to MCeecom/gastelemetry.rnd
+block 420 write habeecom/gastelemetry.rnd to SIMeecom/gastelemetry.rnd
+
+block 500 if restartFLAG != 1 then read MCeecom/GASMC.RND -> inpstr4$
+(if restartFLAG == 1 then inpstr4$ is taken from backup.rnd)
+block 510 write inpstr4$ to HABeecom/GASMC.RND and also SIMeecom/GASMC.RND
+
+block 600 - 610 is the same, but SIMeecom/GASSIM.RND -> HABeecom/GASSIM.RND
+
+block 700 - 710 is the same, SIMeecom/DOORSIM.RND -> HABeecom/DOORSIM.RND except change in memory before writing:
+DOORSIM.RND[269-270] <- RCblock
+DOORSIM.RND[271-273] <- IS2
+DOORSIM.RND[267-268] <- PACKblock
+
+block 800 - 810 is the same, habeng/ORBITSSE.RND -> flight/ORBITSSE.RND
+except change in memory before writing:
+temp$ = ORBITSSE.RND[207-214]
+if flightreset = 1 then ORBITSSE.RND[201-208] = 8
+if restartFLAG = 1 then ORBITSSE.RND[201-208] = 24
+ORBITSSE.RND[129-136] = probe (0 or 1 or 2)
+if probe = 1 then ORBITSSE.RND[137-144] = 1
+set EL6, switch1, EL1, IS2, PBflag, RCblock, PACKblock
+
+block 820 is the above modified file being written to telemetry/ORBITSSE.RND
+except ORBITSSE.RND[207-214] = temp$
+
+block 830 is the same as above modified, written to SIMmirror/ORBITSSE.RND
+
+block 840 is above, to simulator/ORBITSSE.RND
+
+block 900-920 is reading from display/MST.RND unless restartFLAG, then write to flight/MST.RND and mirror/MST.RND
+
+block 930 is writing to HABeecom/TIME.RND
+block 940 is writing to MCeecom/TIME.RND
+
+block 1000 and a bit is backup
+
+block 1200 is reading from backup.rnd then writing to
+a bunch of files?
+ahhhhhhhhhhhh,
+it writes the contents of files that have been read into backups
