@@ -18,7 +18,7 @@ scratchings of understanding the legacy code are also in there.
 ### Setup:
 
     git clone https://github.com/OCESS/serverv-py
-    ./setup.sh
+    ./setup.bash
     source bin/activate
 
 ### Usage:
