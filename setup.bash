@@ -18,6 +18,9 @@ echo 'Installing python packages...'
 source bin/activate
 pip install -r requirements.txt
 
+# Error on unused variables, but after bin/activate because it would fail.
+set -u
+
 echo ''
 echo 'wgetting large blobs into orbit-files...'
 # Too big to store on github, and it's just the same file x9, really.

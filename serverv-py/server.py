@@ -126,41 +126,43 @@ file_connectors = [
     FileConnector('HABeng', ['flight', 'telemetry',
                              'simulator', 'SIMmirror'], 'ORBITSSE.RND', 1159),
     # Block 900
+    FileConnector('display', ['flight', 'mirror'], 'MST.RND', 26),
+    # Block 930
     FileConnector('MCeecom', ['HABeecom', 'MCeecom'], 'TIME.RND', 26)
 ]
 
 
-def update_orbit_files(loop):
+def update_orbit_files(event_loop):
     """Read, update all .RND files at 1 Hz. Helper for event loop."""
-    reschedule_time = loop.time() + 1.0
-    print('Updating orbit_files at', loop.time())
+    reschedule_time = event_loop.time() + 1.0
+    print('Updating orbit_files at', event_loop.time())
     for connector in file_connectors:
         connector.process_src()
     for connector in file_connectors:
         connector.write_to_dest()
-    loop.call_at(reschedule_time, update_orbit_files, loop)
+    event_loop.call_at(reschedule_time, update_orbit_files, event_loop)
 
 
 def request_exit(signal=None):
-    """Ask loop to finish all callbacks and exit."""
+    """Ask event loop to finish all callbacks and exit."""
     if signal is not None:
         print("Got signal", signal, "and shutting down.")
-    loop.stop()
+    event_loop.stop()
 
 
 # Set up signal handler and call update_orbit_files.
-loop = asyncio.get_event_loop()
+event_loop = asyncio.get_event_loop()
 for signame in ('SIGINT', 'SIGTERM'):
-    loop.add_signal_handler(getattr(signal, signame),
-                            functools.partial(request_exit, signame))
-loop.call_soon(update_orbit_files, loop)
+    event_loop.add_signal_handler(getattr(signal, signame),
+                                  functools.partial(request_exit, signame))
+event_loop.call_soon(update_orbit_files, event_loop)
 
 # Debug mode gives us useful information for development.
-loop.set_debug(True)
+event_loop.set_debug(True)
 warnings.simplefilter('always', ResourceWarning)
 
-# Run until loop.stop() is called.
-loop.run_forever()
-loop.close()
+# Run until event_loop.stop() is called.
+event_loop.run_forever()
+event_loop.close()
 
 print(file_vars)

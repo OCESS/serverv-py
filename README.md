@@ -30,4 +30,4 @@ scratchings of understanding the legacy code are also in there.
 
     # Will run server.py for a few seconds, then exit.
     # Also checks that no .RND files were changed after running.
-    ./test.sh
+    ./test.bash
