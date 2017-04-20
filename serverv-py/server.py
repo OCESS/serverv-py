@@ -39,18 +39,6 @@ with open(args.sevpath, "r") as sevpaths:
 del clients  # all information is now in client_path as the keys
 
 
-# 1 flight (OSbackup.RND, ORBITSSE.RND, MST.RND, lastly RESTART.RND)
-# 2 mirror (OSbackup.RND, MST.RND)
-# 3 telemetry (OSbackup.RND, ORB5res.RND, ORBITSSE.RND)
-# 4 simulator (OSbackup.RND, ORB5res.RND, ORBITSSE.RND, lastly engsimrs.RND)
-# 5 hab eecom (GASTELEMETRY.RND, GASMC.RND, GASSIM.RND, DOORSIM.RND, TIME.RND, lastly EECOMrs.RND) # noqa: E501
-# 6 MC eecom (GASTELEMETRY.RND, GASMC.RND, TIME.RND, lastly GASMCrs.RND)
-# 7 sim eecom (OSbackup.RND, GASTELEMETRY.RND, GASMC.RND, GASSIM.RND, DOORSISM.RND, lastly gasRS1.RND and gasRS2.RND) # noqa: E501
-# 8 display (OSbackup.RND, MST.RND, lastly MSTrs.RND)
-# 9 hab eng (OSbackup.RND, ORB5res.RND, ORBITSSE.RND, lastly resetSSE.RND)
-# 10 sim mirror (OSbackup.RND, ORBITSSE.RND)
-# 11 hab display (OSbackup.RND)
-
 def simplify_filename(filename):
     """Return the lowercase filename, no extensions."""
     return PurePath(filename.lower()).stem

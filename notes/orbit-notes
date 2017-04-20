@@ -15,11 +15,11 @@ P(0, 4, 5, 8, 9, 10) = { colour, mass, radius, atmosphere_density, atmosphere_he
 
 then year, day, hr, min, sec
 
-Px(3) Py(3) Vx() Vy() P(1, 2) = {xpos, ypos, xvelocity, yvelocity, xaccel, yaccel}
+Px(3) Py(3) Vx() Vy() P(1, 2) = {xpos, ypos, xvelocity, yvelocity, xaccel, yaccel} 35 times
 
-names
+names 39 times
 
-what do the numbers after names mean? need new orbit
+panel(i) = {} 265 times, but this seems to just be stuff for drawing
 
 
 
@@ -103,7 +103,7 @@ block 800 - 810 is the same, habeng/ORBITSSE.RND -> flight/ORBITSSE.RND
 except change in memory before writing:
 temp$ = ORBITSSE.RND[207-214]
 if flightreset = 1 then ORBITSSE.RND[201-208] = 8
-if restartFLAG = 1 then ORBITSSE.RND[201-208] = 24
+if restartFLAG = 1 then ORBITSSE.RND[201-208] = 24G
 ORBITSSE.RND[129-136] = probe (0 or 1 or 2)
 if probe = 1 then ORBITSSE.RND[137-144] = 1
 set EL6, switch1, EL1, IS2, PBflag, RCblock, PACKblock
@@ -126,3 +126,29 @@ block 1200 is reading from backup.rnd then writing to
 a bunch of files?
 ahhhhhhhhhhhh,
 it writes the contents of files that have been read into backups
+
+Files that various programs touch:
+# 1 flight (OSbackup.RND, ORBITSSE.RND, MST.RND, lastly RESTART.RND)
+# 2 mirror (OSbackup.RND, MST.RND)
+# 3 telemetry (OSbackup.RND, ORB5res.RND, ORBITSSE.RND)
+# 4 simulator (OSbackup.RND, ORB5res.RND, ORBITSSE.RND, lastly engsimrs.RND)
+# 5 hab eecom (GASTELEMETRY.RND, GASMC.RND, GASSIM.RND, DOORSIM.RND, TIME.RND, lastly EECOMrs.RND) # noqa: E501
+# 6 MC eecom (GASTELEMETRY.RND, GASMC.RND, TIME.RND, lastly GASMCrs.RND)
+# 7 sim eecom (OSbackup.RND, GASTELEMETRY.RND, GASMC.RND, GASSIM.RND, DOORSISM.RND, lastly gasRS1.RND and gasRS2.RND) # noqa: E501
+# 8 display (OSbackup.RND, MST.RND, lastly MSTrs.RND)
+# 9 hab eng (OSbackup.RND, ORB5res.RND, ORBITSSE.RND, lastly resetSSE.RND)
+# 10 sim mirror (OSbackup.RND, ORBITSSE.RND)
+# 11 hab display (OSbackup.RND)
+
+
+
+
+
+
+piloting notes (orbit5v.bas):
+files that it opens:
+starsr
+marsTOPOLOG.RND
+orbitstr.txt (which savefile to use, 'situation file')
+MST.RND
+ORBITSSE.RND
