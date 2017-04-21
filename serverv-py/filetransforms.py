@@ -1,8 +1,17 @@
-"""Functions that copy file io functionality of serverv.bas."""
+"""Functions that copy file io functionality of serverv.bas.
+
+As a recap, this entire program tries to keep communication consistent
+between legacy (i.e. file-based IPC between QBasic programs written by Dr.
+Magwood) and Ivan's new node.js-based project.
+
+This module is the legacy file-based IPC functionality.
+"""
 from os import SEEK_SET
 import struct  # Reading floats from bytearrays
-from datetime import datetime, date, timedelta
+from datetime import timedelta
 import time
+
+import utility
 
 
 def _mki(integer): return integer.to_bytes(2, byteorder='little')
@@ -140,23 +149,9 @@ def MCeecom_time_parse(src, file_vars):
     """Block 930. Also a bit of time logic."""
     if file_vars.setdefault('use_file_time', True):
         src.seek(1, SEEK_SET)
-        year = _cvi(src.read(2))
-        yday = _cvi(src.read(2))
-        hour = _cvi(src.read(2))
-        minute = _cvi(src.read(2))
-        doublesecond = _cvd(src.read(8))
-        date_fromordinal = date.fromordinal(
-            date(year, 1, 1).toordinal() + yday - 1)
-        file_vars['timestamp'] = datetime(
-            year=year,
-            month=date_fromordinal.month,
-            day=date_fromordinal.day,
-            hour=hour,
-            minute=minute,
-            second=int(doublesecond),
-            microsecond=int(doublesecond % 1 * 1000000)
-            # No tzinfo because this datetime is really beta-reality time.
-        )
+        file_vars['timestamp'] = utility.qb_time_to_datetime(
+            _cvi(src.read(2)), _cvi(src.read(2)), _cvi(src.read(2)),
+            _cvi(src.read(2)), _cvd(src.read(8)))
     else:
         file_vars['last_time_update'] = time.perf_counter()
         file_vars['timestamp'] = (
