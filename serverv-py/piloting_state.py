@@ -13,10 +13,13 @@ piloting client, and hopefully other clients.
 #   to since our last update.
 # - Find out what changed between updates, and only update that.
 # - Read huge chunks of the file at the same time.
+# - Read different files in their own threads
 
 import csv
 from collections import namedtuple
 import numbers
+import msgpack
+from pathlib import Path
 
 import utility
 
@@ -27,8 +30,17 @@ _PVA = namedtuple('PVA',  # PVA: Position, Velocity, Acceleration
 
 _EntityImmutables = \
     namedtuple('EntityImmutables',
-               ['name', 'mass', 'radius',
+               ['name', 'colour', 'mass', 'radius',
                 'atmosphere_density', 'atmosphere_height', 'wtf'])
+
+
+def _sanitize_float_str(str):
+    """Sanitize and convert QBasic string floats.
+
+    QBasic string representations of doubles have # appended,
+    or sometimes a D instead of an E in x.xxxE+k form.
+    """
+    return float(str.replace('#', '').replace('D', 'E'))
 
 
 class Piloting:
@@ -44,24 +56,56 @@ class Piloting:
     sending_function(piloting.serialize())
     """
 
-    _startup_state = {"background_stars": [], "insignificant_pairs": []}
-    _piloting_state = {"datetime": 0.0, "locations": []}
+    def __init__(self, starsr_path):
+        """Save the path to STARSr for use in parsing functions."""
+        self._starsr_path = Path(starsr_path) / 'STARSr'
 
-    def startup_parse_starsr(self, starsr_path):
+    def __repr__(self):
+        """Representation of current state -- verbose."""
+        return (
+            "Piloting(starsr_path={!r}, "
+            "_startup_state={!r}, "
+            "_piloting_state={!r})"
+            .format(self._starsr_path,
+                    self._startup_state,
+                    self._piloting_state))
+
+    def __str__(self):
+        """String of current state -- verbose."""
+        return (
+            "Piloting(starsr_path={!s}, "
+            "_startup_state={!s}, "
+            "_piloting_state={!s})"
+            .format(self._starsr_path,
+                    self._startup_state,
+                    self._piloting_state))
+
+    def pack_immutables(self):
+        """Return a msgpack'd version of the immutable data."""
+        return msgpack.packb(self._startup_state)
+
+    def pack_mutables(self):
+        """Return a msgpack'd version of the mutable data."""
+        return msgpack.packb(self._piloting_state)
+
+    def startup_parse_starsr(self):
         """Read and interpret fields from STARSr at startup.
 
         This is used to read fields that will not change over the course
-        of the simulation. For example, entity names and  background stars.
+        of the simulation. For example, entity names and background stars.
         """
-        with starsr_path.open('r', newline='') as starsr_file:
+        self._startup_state = {"background_stars": [],
+                               "insignificant_pairs": [],
+                               "entities": []}
+        with self._starsr_path.open('r', newline='') as starsr_file:
             data_reader = csv.reader(starsr_file)
             for row_number, row in enumerate(data_reader):
                 if 0 <= row_number and row_number < 3021:
                     # Background stars
                     assert len(row) == 3
                     colour = utility.colour_code_to_rgb(int(row[0]))
-                    x = float(row[1])
-                    y = float(row[2])
+                    x = _sanitize_float_str(row[1])
+                    y = _sanitize_float_str(row[2])
                     assert isinstance(x, numbers.Real)
                     assert isinstance(y, numbers.Real)
                     self._startup_state["background_stars"].append(
@@ -70,22 +114,22 @@ class Piloting:
                     # Pairs of objects that don't significantly attract
                     # TODO: Make sure the pairs of objects are deterministic
                     assert len(row) == 2
-                    first = int(row[0])
-                    second = int(row[1])
+                    first = int(row[0].replace('X', ''))
+                    second = int(row[1].replace('X', ''))
                     assert first >= 0
                     assert second >= 0
                     self._startup_state["insignificant_pairs"].append(
                         (first, second))
                 elif 3262 <= row_number and row_number < 3302:
                     # Colour, mass, radius, atmosphere properties
-                    assert len(row) == 4
-                    colour = int(row[0])
-                    mass = float(row[1])
+                    assert len(row) == 6
+                    colour = utility.colour_code_to_rgb(int(row[0]))
+                    mass = _sanitize_float_str(row[1])
                     radius = int(row[2])
-                    atmosphere_density = float(row[3])
-                    atmosphere_height = float(row[4])
+                    atmosphere_density = _sanitize_float_str(row[3])
+                    atmosphere_height = _sanitize_float_str(row[4])
                     wtf = int(row[5])
-                    assert mass > 0
+                    assert mass >= 0
                     assert radius > 0
                     assert atmosphere_density >= 0
                     assert atmosphere_height >= 0
@@ -101,20 +145,22 @@ class Piloting:
                     assert len(row) == 1
                     self._startup_state["entities"][row_number - 3339] = (
                         self._startup_state["entities"][row_number - 3339]
-                        ._replace(name=row[0]))
+                        ._replace(name=row[0].strip()))
                 else:
                     # Here we get a bunch of things that seem to be used
                     # for drawing OCESS control tower or other objects.
                     break
 
-    def parse_from_starsr(self, starsr_path):
+    def parse_from_starsr(self):
         """Read and interpret raw bytes from STARSr file.
 
         I determine what fields mean what by looking at the sourcecode
-        for orbit5v.bas. You can see my chicken-scratching understanding
-        in notes/orbit-notes.
+        for orbit5v.bas. You can see my chicken - scratching understanding
+        in notes / orbit - notes.
         """
-        with starsr_path.open('r', newline='') as starsr_file:
+        self._piloting_state = {"datetime": 0.0,
+                                "locations": []}
+        with self._starsr_path.open('r', newline='') as starsr_file:
             data_reader = csv.reader(starsr_file)
             for row_number, row in enumerate(data_reader):
                 if 3302 == row_number:
@@ -126,7 +172,7 @@ class Piloting:
                     yday = int(row[1])
                     hour = int(row[2])
                     minute = int(row[3])
-                    doublesecond = float(row[4])
+                    doublesecond = _sanitize_float_str(row[4])
                     # Float of seconds since epoch
                     self._piloting_state["datetime"] = (
                         utility.qb_time_to_datetime(
@@ -135,12 +181,5 @@ class Piloting:
                 elif 3303 <= row_number and row_number < 3339:
                     # Position, Velocity, Acceleration
                     assert len(row) == 6
-                    for num in row:
-                        mutable_string = list(num)
-                        # QBasic puts # after doubles sometimes,
-                        # and also uses 'D+05' instead of 'E+05'
-                        mutable_string.remove('#')
-                        mutable_string = ['E' if c == 'D'
-                                          else c for c in mutable_string]
-                        num = float(''.join(mutable_string))
-                    self._piloting_state["locations"].append(_PVA(*row))
+                    self._piloting_state["locations"].append(
+                        _PVA(*map(_sanitize_float_str, row)))

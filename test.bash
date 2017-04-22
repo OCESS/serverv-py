@@ -12,17 +12,23 @@ trap "rm -rf $TMPDIR; exit 1" EXIT HUP INT TERM
 
 cp -r orbit-files/* "$TMPDIR"
 
+# Spin up a bad echo server
+./test_scripts/super_basic_echo.py &
+ECHO_PID=$!
+
 # Run server.py.
 timeout --preserve-status --signal=TERM 3 \
   ./serverv-py/server.py --sevpath "$TMPDIR/sevpath.RND"
 RETVAL=$?
+
+# End bad echo server
+kill "$ECHO_PID" || true
 
 # Check if any .RND files, except TIME.RND, changed during execution.
 for f in `find orbit-files -type f -printf '%P\n'`; do
   if [[ "`basename $f`" != 'TIME.RND' ]]; then
     diff "orbit-files/$f" "$TMPDIR/$f"
     diffresult=$?
-    echo $diffresult
     if [[ $diffresult -ne 0 ]]; then RETVAL=$diffresult; fi
   fi
 done

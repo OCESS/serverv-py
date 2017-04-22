@@ -24,10 +24,25 @@ scratchings of understanding the legacy code are also in there.
 ### Usage:
 
     # source bin/activate if you haven't done so in the current session
-    ./serverv-py/server.py --sevpath orbit-files/sevpath.RND
+    ./serverv-py/server.py --sevpath orbit-files/sevpath.RND --piloting 127.0.0.1:31415
 
 ### Testing:
 
     # Will run server.py for a few seconds, then exit.
-    # Also checks that no .RND files were changed after running.
+    # Also checks that no .RND files were changed after running,
+    # and spins up a very basic server to receive network messages.
     ./test.bash
+
+### Source files:
+
+There are a few sources in `serverv-py/serverv-py`. The most important is
+`server.py`, which contains the main event loop and calls other modules.
+
+- `server.py`: Actually runs everything asynchronously.
+- `filetransforms.py`: Generalized helper logic for copying files between legacy
+  QB clients.
+- `qb_communication.py`: Actually does the copying of files between
+  legacy QB clients
+- `piloting_state.py`: Reads and keeps track of the piloting state, i.e.
+  `STARSr` data file.
+- `utility.py`: A few common helper functions used by different modules.

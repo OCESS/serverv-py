@@ -26,7 +26,7 @@ def qb_time_to_datetime(year, yday, hour, minute, doublesecond):
 RGB = namedtuple('RGB', ['r', 'g', 'b'])
 
 
-def _colour_code_toRGB(code):
+def colour_code_to_rgb(code):
     """Convert a QB colour code to an RGB tuple."""
     # These specific RGB values are actually xterm defaults for RGB mappings
     # from ANSI colour codes. They should be pretty close.
