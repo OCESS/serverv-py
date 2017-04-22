@@ -12,9 +12,9 @@ General program flow:
 import argparse
 import asyncio
 import signal
-import functools
 import warnings
 import socket
+from sys import version_info
 
 import qb_communication
 import piloting_state
@@ -73,18 +73,21 @@ def send_status_message(event_loop):
     event_loop.call_at(reschedule_time, send_status_message, event_loop)
 
 
-def request_exit(signal=None):
+def handle_exit(sig, _):
     """Ask event loop to finish all callbacks and exit."""
-    if signal is not None:
-        print("Got signal", signal, "and shutting down.")
+    if version_info >= (3, 5):
+        # Only implemented >= python 3.5
+        sig = signal.Signals(sig).name
+    print("Got signal", sig, "and shutting down.")
     event_loop.stop()
+
+
+for signame in [signal.SIGINT, signal.SIGTERM]:
+    signal.signal(signame, handle_exit)
 
 
 # Set up signal handler and asynchronous tasks.
 event_loop = asyncio.get_event_loop()
-for signame in ('SIGINT', 'SIGTERM'):
-    event_loop.add_signal_handler(getattr(signal, signame),
-                                  functools.partial(request_exit, signame))
 event_loop.call_soon(update_orbit_files, event_loop)
 event_loop.call_soon(send_startup_message, event_loop)
 

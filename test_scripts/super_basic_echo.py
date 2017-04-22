@@ -5,7 +5,7 @@
 # Usage: shitty_serverv_echo.py
 # and then start up serverv-py
 
-from socket import *
+from socket import *  # I know, gross.
 import msgpack
 
 ECHO_PORT = 31415
@@ -20,11 +20,12 @@ total_data = []
 while 1:
     data = tcp_conn.recv(BUFSIZE)
     if not data:
-        startup_message = msgpack.unpackb(b''.join(total_data))
+        total_data_string = b''.join(total_data)
+        startup_message = msgpack.unpackb(total_data_string)
         assert b'background_stars' in startup_message
         assert b'insignificant_pairs' in startup_message
         assert b'entities' in startup_message
-        print('server received from %r of length %d' % (addr, len(startup_message)))
+        print('server received from %r of length %d' % (addr, len(total_data_string)))
         break
     else:
         total_data.append(data)
@@ -33,7 +34,8 @@ while 1:
 udp_socket = socket(AF_INET, SOCK_DGRAM)
 udp_socket.bind(('', ECHO_PORT))
 while 1:
-    status_update = msgpack.unpackb(udp_socket.recv(BUFSIZE))
+    data = udp_socket.recv(BUFSIZE)
+    status_update = msgpack.unpackb(data)
     assert b'datetime' in status_update
     assert b'locations' in status_update
-    print('server update of length %d' % len(status_update))
+    print('server update of length %d' % len(data))
