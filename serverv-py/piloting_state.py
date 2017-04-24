@@ -166,8 +166,6 @@ class Piloting:
                 if 3302 == row_number:
                     # Date and time
                     assert len(row) == 5
-                    # TODO: This was copy-pasted from filetransforms.py,
-                    #       consider a common.py module of helpers
                     year = int(row[0])
                     yday = int(row[1])
                     hour = int(row[2])
